@@ -64,7 +64,10 @@ public:
     void setKillSwitchEnabled(bool enabled);
     bool isStrictKillSwitchEnabled() const;
     void setStrictKillSwitchEnabled(bool enabled);
-    
+
+    bool isStrictSplitTunnelingEnabled() const;
+    void setStrictSplitTunnelingEnabled(bool enabled);
+
     bool isAutoConnect() const;
     void setAutoConnect(bool enabled);
     bool isStartMinimized() const;

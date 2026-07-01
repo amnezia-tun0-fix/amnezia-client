@@ -2241,6 +2241,16 @@ Thank you for staying with us!</source>
         <translation>Раздельное туннелирование приложений</translation>
     </message>
     <message>
+        <location filename="../ui/qml/Pages2/PageSettingsAppSplitTunneling.qml" line="101"/>
+        <source>Strict split tunneling</source>
+        <translation>Строгое раздельное туннелирование</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/Pages2/PageSettingsAppSplitTunneling.qml" line="110"/>
+        <source>Also block apps that bypass split tunneling by binding directly to the VPN interface, preventing them from leaking traffic and the server IP into the tunnel</source>
+        <translation>Также блокировать приложения, которые обходят раздельное туннелирование, привязываясь напрямую к VPN-интерфейсу, — чтобы они не могли просочить трафик и IP сервера в туннель</translation>
+    </message>
+    <message>
         <location filename="../ui/qml/Pages2/PageSettingsAppSplitTunneling.qml" line="113"/>
         <source>Mode</source>
         <translation>Режим</translation>
