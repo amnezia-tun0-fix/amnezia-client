@@ -2,6 +2,7 @@ package org.amnezia.vpn.protocol.xray
 
 import android.content.Context
 import android.net.VpnService.Builder
+import android.os.Build
 import java.io.File
 import java.io.IOException
 import java.net.InetAddress
@@ -18,8 +19,11 @@ import org.amnezia.vpn.protocol.xray.libXray.DialerController
 import org.amnezia.vpn.protocol.xray.libXray.LibXray
 import org.amnezia.vpn.protocol.xray.libXray.Logger
 import org.amnezia.vpn.protocol.xray.libXray.Tun2SocksConfig
+import org.amnezia.vpn.protocol.xray.libXray.UidFilterController
 import org.amnezia.vpn.util.Log
 import org.amnezia.vpn.util.net.InetNetwork
+import org.amnezia.vpn.util.net.SplitTunnelMode
+import org.amnezia.vpn.util.net.StrictSplitTunnelGuard
 import org.amnezia.vpn.util.net.ip
 import org.amnezia.vpn.util.net.parseInetAddress
 import org.json.JSONArray
@@ -94,7 +98,8 @@ class Xray : Protocol() {
             }
         }
 
-        start(xrayConfig, xrayJsonConfigString, vpnBuilder, protect)
+        val strictSplitTunnel = config.optBoolean("strictSplitTunneling", false)
+        start(xrayConfig, xrayJsonConfigString, vpnBuilder, protect, strictSplitTunnel)
         state.value = CONNECTED
         isRunning = true
     }
@@ -142,7 +147,13 @@ class Xray : Protocol() {
         }
     }
 
-    private fun start(config: XrayConfig, configJson: String, vpnBuilder: Builder, protect: (Int) -> Boolean) {
+    private fun start(
+        config: XrayConfig,
+        configJson: String,
+        vpnBuilder: Builder,
+        protect: (Int) -> Boolean,
+        strictSplitTunnel: Boolean
+    ) {
         buildVpnInterface(config, vpnBuilder)
 
         DialerController { protect(it.toInt()) }.also {
@@ -153,6 +164,8 @@ class Xray : Protocol() {
                 throw VpnStartException("Failed to register listener controller: $err")
             }
         }
+
+        registerUidFilter(config, strictSplitTunnel)
 
         vpnBuilder.establish().use { tunFd ->
             if (tunFd == null) {
@@ -189,6 +202,9 @@ class Xray : Protocol() {
         LibXray.stopTun2Socks().isNotNullOrBlank { err ->
             Log.e(TAG, "Failed to stop tun2Socks: $err")
         }
+        LibXray.unregisterUidFilter().isNotNullOrBlank { err ->
+            Log.e(TAG, "Failed to unregister uid filter: $err")
+        }
 
         isRunning = false
         state.value = DISCONNECTED
@@ -208,6 +224,36 @@ class Xray : Protocol() {
         }
         LibXray.startTun2Socks(tun2SocksConfig, fd.toLong()).isNotNullOrBlank { err ->
             throw VpnStartException("Failed to start tun2socks: $err")
+        }
+    }
+
+    // Strict Split Tunneling (issue #2457): when enabled, registers a userspace
+    // per-connection UID filter so apps that bypass the OS split-tunnel rules
+    // (SO_BINDTODEVICE on tun0) cannot leak traffic into the tunnel. Off, or with
+    // no app split tunneling configured, the filter is cleared (legacy behavior).
+    private fun registerUidFilter(config: XrayConfig, strictSplitTunnel: Boolean) {
+        if (!strictSplitTunnel || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            LibXray.unregisterUidFilter()
+            return
+        }
+
+        val (mode, apps) = when {
+            config.includedApplications.isNotEmpty() -> SplitTunnelMode.INCLUDE to config.includedApplications
+            config.excludedApplications.isNotEmpty() -> SplitTunnelMode.EXCLUDE to config.excludedApplications
+            else -> {
+                // App split tunneling is off — nothing to enforce.
+                LibXray.unregisterUidFilter()
+                return
+            }
+        }
+
+        val guard = StrictSplitTunnelGuard.create(context, mode, apps)
+        LibXray.registerUidFilter(object : UidFilterController {
+            // gomobile maps Go int -> Java long, so ports arrive as Long.
+            override fun allow(network: String, srcIp: String, srcPort: Long, dstIp: String, dstPort: Long): Boolean =
+                guard.allow(network, srcIp, srcPort.toInt(), dstIp, dstPort.toInt())
+        }).isNotNullOrBlank { err ->
+            throw VpnStartException("Failed to register uid filter: $err")
         }
     }
 
