@@ -98,6 +98,28 @@ PageType {
             }
         }
 
+        HeaderTypeWithSwitcher {
+            visible: Qt.platform.os === "android"
+
+            Layout.fillWidth: true
+            Layout.topMargin: 16
+            Layout.leftMargin: 16
+            Layout.rightMargin: 16
+
+            headerText: qsTr("Strict split tunneling")
+            descriptionText: qsTr("Also block apps that bypass split tunneling by binding directly to the VPN interface, preventing them from leaking traffic and the server IP into the tunnel")
+
+            enabled: root.pageEnabled && AppSplitTunnelingController.isSplitTunnelingEnabled
+            showSwitcher: true
+            switcher {
+                checked: SettingsController.strictSplitTunnelingEnabled
+                enabled: root.pageEnabled && AppSplitTunnelingController.isSplitTunnelingEnabled
+            }
+            switcherFunction: function(checked) {
+                SettingsController.strictSplitTunnelingEnabled = checked
+            }
+        }
+
         DropDownType {
             id: selector
 
