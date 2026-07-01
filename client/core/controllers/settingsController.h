@@ -68,6 +68,9 @@ public:
     bool isStrictKillSwitchEnabled() const;
     void toggleStrictKillSwitch(bool enable);
 
+    bool isStrictSplitTunnelingEnabled() const;
+    void toggleStrictSplitTunneling(bool enable);
+
     QString getInstallationUuid(bool createIfNotExists = true) const;
 
     void enableDevMode();
