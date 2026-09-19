@@ -2,7 +2,6 @@ package org.amnezia.vpn.protocol.xray
 
 import android.content.Context
 import android.net.VpnService.Builder
-import android.os.Build
 import java.io.File
 import java.io.IOException
 import java.net.InetAddress
@@ -22,7 +21,6 @@ import org.amnezia.vpn.protocol.xray.libXray.Tun2SocksConfig
 import org.amnezia.vpn.protocol.xray.libXray.UidFilterController
 import org.amnezia.vpn.util.Log
 import org.amnezia.vpn.util.net.InetNetwork
-import org.amnezia.vpn.util.net.SplitTunnelMode
 import org.amnezia.vpn.util.net.StrictSplitTunnelGuard
 import org.amnezia.vpn.util.net.ip
 import org.amnezia.vpn.util.net.parseInetAddress
@@ -232,22 +230,16 @@ class Xray : Protocol() {
     // (SO_BINDTODEVICE on tun0) cannot leak traffic into the tunnel. Off, or with
     // no app split tunneling configured, the filter is cleared (legacy behavior).
     private fun registerUidFilter(config: XrayConfig, strictSplitTunnel: Boolean) {
-        if (!strictSplitTunnel || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+        val guard = if (strictSplitTunnel) {
+            StrictSplitTunnelGuard.createOrNull(context, config.includedApplications, config.excludedApplications)
+        } else {
+            null
+        }
+        if (guard == null) {
             LibXray.unregisterUidFilter()
             return
         }
 
-        val (mode, apps) = when {
-            config.includedApplications.isNotEmpty() -> SplitTunnelMode.INCLUDE to config.includedApplications
-            config.excludedApplications.isNotEmpty() -> SplitTunnelMode.EXCLUDE to config.excludedApplications
-            else -> {
-                // App split tunneling is off — nothing to enforce.
-                LibXray.unregisterUidFilter()
-                return
-            }
-        }
-
-        val guard = StrictSplitTunnelGuard.create(context, mode, apps)
         LibXray.registerUidFilter(object : UidFilterController {
             // gomobile maps Go int -> Java long, so ports arrive as Long.
             override fun allow(network: String, srcIp: String, srcPort: Long, dstIp: String, dstPort: Long): Boolean =

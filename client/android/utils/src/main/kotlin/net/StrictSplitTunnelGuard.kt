@@ -86,6 +86,24 @@ class StrictSplitTunnelGuard internal constructor(
 
     companion object {
         /**
+         * Builds a guard for the app split-tunnel lists of a protocol config, or returns
+         * null when there is nothing to enforce: app split tunneling is off, or the
+         * platform is older than API 29, where the owner cannot be resolved.
+         */
+        fun createOrNull(
+            context: Context,
+            includedApps: Set<String>,
+            excludedApps: Set<String>,
+        ): StrictSplitTunnelGuard? {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
+            return when {
+                includedApps.isNotEmpty() -> create(context, SplitTunnelMode.INCLUDE, includedApps)
+                excludedApps.isNotEmpty() -> create(context, SplitTunnelMode.EXCLUDE, excludedApps)
+                else -> null
+            }
+        }
+
+        /**
          * Builds a guard whose resolver uses
          * [ConnectivityManager.getConnectionOwnerUid] (API 29+). [packageNames] is
          * the split-tunnel app list for [mode]; it is resolved to UIDs once here.
