@@ -33,10 +33,11 @@ enum class SplitTunnelMode { INCLUDE, EXCLUDE }
  * exercised without Android; the production resolver (ConnectivityManager-backed)
  * is built by [create].
  *
- * An unresolved owner (INVALID_UID) is denied (fail-closed): a non-root app's tun
- * traffic always has an owning socket, so an unresolved UID is a rare transient
- * race rather than an attack primitive — crafting an ownerless packet needs raw
- * sockets (root), which is outside this feature's threat model.
+ * An unresolved owner (INVALID_UID) is denied (fail-closed). Android returns it
+ * both when no socket matches and when the owner is not covered by this VPN, so
+ * an app outside the split-tunnel rules lands here, which is the intended deny.
+ * Crafting an ownerless packet needs raw sockets (root), which is outside this
+ * feature's threat model.
  */
 class StrictSplitTunnelGuard internal constructor(
     private val mode: SplitTunnelMode,
@@ -55,7 +56,7 @@ class StrictSplitTunnelGuard internal constructor(
     fun allow(network: String, srcIp: String, srcPort: Int, dstIp: String, dstPort: Int): Boolean {
         val uid = ownerUid(network, srcIp, srcPort, dstIp, dstPort)
         if (uid == INVALID_UID) {
-            Log.w(TAG, "deny $network $srcIp:$srcPort->$dstIp:$dstPort: owner uid unresolved")
+            Log.w(TAG, "deny $network $srcIp:$srcPort->$dstIp:$dstPort: owner unresolved or outside this VPN")
             return false
         }
         if (uid == ownUid) return true
