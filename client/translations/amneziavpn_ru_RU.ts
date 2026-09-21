@@ -3984,16 +3984,6 @@ Create one from the current settings.</source>
         <translation>Раздельное туннелирование приложений</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageSettingsAppSplitTunneling.qml" line="109"/>
-        <source>Strict split tunneling</source>
-        <translation>Строгое раздельное туннелирование</translation>
-    </message>
-    <message>
-        <location filename="../ui/qml/Pages2/PageSettingsAppSplitTunneling.qml" line="110"/>
-        <source>Also block apps that bypass split tunneling by binding directly to the VPN interface, preventing them from leaking traffic and the server IP into the tunnel</source>
-        <translation>Также блокировать приложения, которые обходят раздельное туннелирование, привязываясь напрямую к VPN-интерфейсу, — чтобы они не могли просочить трафик и IP сервера в туннель</translation>
-    </message>
-    <message>
         <location filename="../ui/qml/Pages2/PageSettingsAppSplitTunneling.qml" line="112"/>
         <source>Mode</source>
         <translation>Режим</translation>
@@ -6909,6 +6899,43 @@ FileZilla или другие SFTP-клиенты, а также смонтир�
         <location filename="../ui/controllers/settingsUiController.cpp" line="187"/>
         <source>All settings have been reset to default values</source>
         <translation>Все настройки сброшены до значений по умолчанию</translation>
+    </message>
+</context>
+<context>
+    <name>StrictSplitTunnelingSwitcher</name>
+    <message>
+        <location filename="../ui/qml/Components/StrictSplitTunnelingSwitcher.qml" line="17"/>
+        <source>Strict split tunneling</source>
+        <translation>Строгое раздельное туннелирование</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/Components/StrictSplitTunnelingSwitcher.qml" line="18"/>
+        <source>Block apps that split tunneling keeps out of the VPN, even if they connect to the VPN interface directly. Works with AmneziaWG and WireGuard</source>
+        <translation>Блокировать приложения, которым раздельное туннелирование закрывает VPN, даже если они подключаются к VPN-интерфейсу напрямую. Работает с AmneziaWG и WireGuard</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/Components/StrictSplitTunnelingSwitcher.qml" line="33"/>
+        <source>Enable strict split tunneling?</source>
+        <translation>Включить строгое раздельное туннелирование?</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/Components/StrictSplitTunnelingSwitcher.qml" line="34"/>
+        <source>Some apps detect a VPN by connecting through its interface directly, bypassing the split tunneling rules, and can learn the server&apos;s IP address this way. Strict mode drops such connections. It takes effect from the next connection.
+
+In the &quot;only the apps from the list&quot; mode, Private DNS set to a provider hostname stops working for the listed apps. Set Private DNS to Automatic or Off.</source>
+        <translation>Некоторые приложения обнаруживают VPN, подключаясь через его интерфейс напрямую в обход правил раздельного туннелирования, и так могут узнать IP-адрес сервера. Строгий режим отбрасывает такие соединения. Он начинает действовать со следующего подключения.
+
+В режиме «только приложения из списка» частный DNS-сервер с указанным именем хоста перестаёт работать у приложений из списка. Выберите для частного DNS режим «Автоматически» или «Отключено».</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/Components/StrictSplitTunnelingSwitcher.qml" line="35"/>
+        <source>Continue</source>
+        <translation>Продолжить</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/Components/StrictSplitTunnelingSwitcher.qml" line="36"/>
+        <source>Cancel</source>
+        <translation>Отменить</translation>
     </message>
 </context>
 <context>

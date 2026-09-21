@@ -268,6 +268,12 @@ bool ServersUiController::isDefaultServerDefaultContainerHasSplitTunneling() con
     return false;
 }
 
+bool ServersUiController::isDefaultServerDefaultContainerSupportsStrictSplitTunneling() const
+{
+    const DockerContainer defaultContainer = m_serversController->getDefaultContainer(m_serversController->getDefaultServerId());
+    return defaultContainer == DockerContainer::Awg || defaultContainer == DockerContainer::WireGuard;
+}
+
 bool ServersUiController::isDefaultServerFromApi() const
 {
     return isServerFromApi(getDefaultServerId());
