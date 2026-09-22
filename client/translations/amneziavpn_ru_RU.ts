@@ -6910,8 +6910,8 @@ FileZilla или другие SFTP-клиенты, а также смонтир�
     </message>
     <message>
         <location filename="../ui/qml/Components/StrictSplitTunnelingSwitcher.qml" line="18"/>
-        <source>Block apps that split tunneling keeps out of the VPN, even if they connect to the VPN interface directly. Works with AmneziaWG and WireGuard</source>
-        <translation>Блокировать приложения, которым раздельное туннелирование закрывает VPN, даже если они подключаются к VPN-интерфейсу напрямую. Работает с AmneziaWG и WireGuard</translation>
+        <source>Blocks bypasses of the tunneling rules. Strictly prevents apps from using the VPN tunnel directly unless they are allowed to use the VPN. Supports AmneziaWG and WireGuard</source>
+        <translation>Блокирует обходы правил туннелирования. Строго запрещает приложениям напрямую использовать VPN-туннель, если они не включены в список разрешенных для VPN. Поддерживает AmneziaWG и WireGuard</translation>
     </message>
     <message>
         <location filename="../ui/qml/Components/StrictSplitTunnelingSwitcher.qml" line="33"/>
