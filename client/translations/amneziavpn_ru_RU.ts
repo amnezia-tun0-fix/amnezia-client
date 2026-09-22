@@ -6920,10 +6920,10 @@ FileZilla или другие SFTP-клиенты, а также смонтир�
     </message>
     <message>
         <location filename="../ui/qml/Components/StrictSplitTunnelingSwitcher.qml" line="34"/>
-        <source>Some apps detect a VPN by connecting through its interface directly, bypassing the split tunneling rules, and can learn the server&apos;s IP address this way. Strict mode drops such connections. It takes effect from the next connection.
+        <source>Some apps detect a VPN by connecting through its interface directly, bypassing the split tunneling rules, and can learn the server&apos;s IP address this way. Strict mode drops such connections.
 
 In the &quot;only the apps from the list&quot; mode, Private DNS set to a provider hostname stops working for the listed apps. Set Private DNS to Automatic or Off.</source>
-        <translation>Некоторые приложения обнаруживают VPN, подключаясь через его интерфейс напрямую в обход правил раздельного туннелирования, и так могут узнать IP-адрес сервера. Строгий режим отбрасывает такие соединения. Он начинает действовать со следующего подключения.
+        <translation>Некоторые приложения обнаруживают VPN, подключаясь через его интерфейс напрямую в обход правил раздельного туннелирования, и так могут узнать IP-адрес сервера. Строгий режим отбрасывает такие соединения.
 
 В режиме «только приложения из списка» частный DNS-сервер с указанным именем хоста перестаёт работать у приложений из списка. Выберите для частного DNS режим «Автоматически» или «Отключено».</translation>
     </message>
