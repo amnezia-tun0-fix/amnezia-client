@@ -271,7 +271,8 @@ bool ServersUiController::isDefaultServerDefaultContainerHasSplitTunneling() con
 bool ServersUiController::isDefaultServerDefaultContainerSupportsStrictSplitTunneling() const
 {
     const DockerContainer defaultContainer = m_serversController->getDefaultContainer(m_serversController->getDefaultServerId());
-    return defaultContainer == DockerContainer::Awg || defaultContainer == DockerContainer::WireGuard;
+    const Proto protocol = ContainerUtils::defaultProtocol(defaultContainer);
+    return protocol == Proto::Awg || protocol == Proto::WireGuard;
 }
 
 bool ServersUiController::isDefaultServerFromApi() const

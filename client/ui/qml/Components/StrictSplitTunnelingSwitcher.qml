@@ -15,7 +15,7 @@ SwitcherType {
              && ServersUiController.isDefaultServerDefaultContainerSupportsStrictSplitTunneling
 
     text: qsTr("Strict split tunneling")
-    descriptionText: qsTr("Block apps that split tunneling keeps out of the VPN, even if they connect to the VPN interface directly. Works with AmneziaWG and WireGuard")
+    descriptionText: qsTr("Blocks bypasses of the tunneling rules. Strictly prevents apps from using the VPN tunnel directly unless they are allowed to use the VPN. Supports AmneziaWG and WireGuard")
 
     checked: SettingsController.strictSplitTunnelingEnabled
 
