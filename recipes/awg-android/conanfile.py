@@ -13,8 +13,8 @@ class AwgAndroid(ConanFile):
     name = "awg-android"
     # Strict Split Tunneling: built from the fork that adds the awgSetUidFilter
     # JNI bridge, pinned by commit. Back to the upstream tag once it is merged.
-    version = "3.1.20260814-strict.5"
-    _commit = "38e284306b3a7806d11ab386c43a995abc87a3d9"
+    version = "3.1.20260814-strict.6"
+    _commit = "4ac9414ef66057356a303837be0ca9dc578dbd44"
     settings = "os", "arch", "build_type", "compiler"
 
     def configure(self):
