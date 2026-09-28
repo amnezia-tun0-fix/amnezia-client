@@ -37,7 +37,7 @@ android {
     val abiList = qtTargetAbiList.split(",")
 
     defaultConfig {
-        applicationId = "org.amnezia.vpn"
+        applicationId = "org.amnezia.vpn.exp" // experimental build, installs next to the release
         targetSdk = qtTargetSdkVersion.toInt()
 
         // keeps language resources for only the locales specified below

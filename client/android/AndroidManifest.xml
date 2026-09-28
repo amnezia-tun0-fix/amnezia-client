@@ -30,7 +30,7 @@
 
     <application
         android:name=".AmneziaApplication"
-        android:label="-- %%INSERT_APP_NAME%% --"
+        android:label="AmneziaVPN exp"
         android:icon="@mipmap/icon"
         android:roundIcon="@mipmap/icon_round"
         android:banner="@mipmap/ic_banner"
@@ -209,7 +209,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="org.amnezia.vpn.qtprovider"
+            android:authorities="${applicationId}.qtprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/qtprovider_paths" />
