@@ -258,6 +258,10 @@ class AmneziaActivity : QtActivity() {
                 ContextCompat.startForegroundService(
                     this, Intent(this, AwgService::class.java).putExtra(EXP_CTL, true)
                 )
+                // Bound, the app hears the service's state changes as it does after
+                // its own connect, so the UI follows a command sent from adb.
+                if (vpnProto == null) vpnProto = VpnProto.AWG
+                if (!isInBoundState) doBindService()
                 return
             }
             if (intent.action == ACTION_IMPORT_CONFIG) {

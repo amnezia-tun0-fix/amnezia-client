@@ -562,8 +562,10 @@ open class AmneziaVpnService : VpnService() {
                 mainScope.launch {
                     disconnect()
                     protocolState.first { it == DISCONNECTED || it == UNKNOWN }
-                    expReconnecting = false
+                    // Cleared only once connect() has left DISCONNECTED: the state
+                    // handler would otherwise stop the unbound service under it.
                     connect(patched)
+                    expReconnecting = false
                 }
             }
         }
