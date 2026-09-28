@@ -217,6 +217,15 @@ open class AmneziaVpnService : VpnService() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.getBooleanExtra(EXP_CTL, false) == true) {
+            ServiceCompat.startForeground(
+                this, NOTIFICATION_ID,
+                serviceNotification.buildNotification(serverName, vpnProto?.label, protocolState.value),
+                foregroundServiceTypeCompat
+            )
+            expControl()
+            return START_NOT_STICKY
+        }
         val isAlwaysOn = intent != null && intent.action == SERVICE_INTERFACE
 
         if (isAlwaysOn) {
@@ -389,7 +398,7 @@ open class AmneziaVpnService : VpnService() {
                         networkState.unbindNetworkListener()
                         stopTrafficStatsUpdateJob()
                         // stopSendingStatistics()
-                        if (!isServiceBound) stopService()
+                        if (!isServiceBound && !expReconnecting) stopService()
                     }
 
                     DISCONNECTING -> {
@@ -530,6 +539,41 @@ open class AmneziaVpnService : VpnService() {
         }
     }
 
+    // Experimental builds only: see ExpControl.kt.
+    @MainThread
+    private fun expControl() {
+        val cmd = expCommand()
+        val saved = Prefs.load<String>(PREFS_CONFIG_KEY)
+        val patched = try {
+            expPatch(saved, cmd)
+        } catch (e: Exception) {
+            android.util.Log.e(EXP_TAG, "exp: $cmd rejected: $e; saved ${expSummary(saved)}")
+            return
+        }
+        android.util.Log.i(
+            EXP_TAG, "exp: $cmd; state ${protocolState.value}; " +
+                "saved ${expSummary(saved)}; applying ${expSummary(patched)}"
+        )
+        when (cmd["cmd"]) {
+            "connect" -> connect(patched)
+            "disconnect" -> disconnect()
+            "reconnect" -> {
+                expReconnecting = true
+                mainScope.launch {
+                    disconnect()
+                    protocolState.first { it == DISCONNECTED || it == UNKNOWN }
+                    expReconnecting = false
+                    connect(patched)
+                }
+            }
+        }
+        if (cmd["cmd"] !in listOf("connect", "reconnect") && (isUnknown || isDisconnected) && !isServiceBound) {
+            stopService()
+        }
+    }
+
+    private var expReconnecting = false
+
     @MainThread
     private fun disconnect() {
         if (isUnknown || isDisconnected || protocolState.value == DISCONNECTING) return
@@ -625,7 +669,10 @@ open class AmneziaVpnService : VpnService() {
     companion object {
         fun isRunning(context: Context, processName: String): Boolean =
             context.getSystemService<ActivityManager>()!!.runningAppProcesses.any {
-                it.processName == processName && it.importance <= IMPORTANCE_FOREGROUND_SERVICE
+                // Experimental builds only: VpnProto names the processes of org.amnezia.vpn,
+                // and a build with another applicationId runs them under its own name.
+                it.processName == context.packageName + ":" + processName.substringAfter(':') &&
+                    it.importance <= IMPORTANCE_FOREGROUND_SERVICE
             }
     }
 }

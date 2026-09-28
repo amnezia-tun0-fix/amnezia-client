@@ -252,6 +252,14 @@ class AmneziaActivity : QtActivity() {
     private fun processIntent(intent: Intent) {
         // disable config import when starting activity from history
         if (intent.flags and FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0) {
+            // Experimental builds only: see ExpControl.kt.
+            if (intent.getBooleanExtra(EXP_CTL, false)) {
+                intent.removeExtra(EXP_CTL)
+                ContextCompat.startForegroundService(
+                    this, Intent(this, AwgService::class.java).putExtra(EXP_CTL, true)
+                )
+                return
+            }
             if (intent.action == ACTION_IMPORT_CONFIG) {
                 intent.getStringExtra(EXTRA_CONFIG)?.let {
                     mainScope.launch {
