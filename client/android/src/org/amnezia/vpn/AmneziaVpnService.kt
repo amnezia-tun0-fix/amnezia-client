@@ -217,6 +217,15 @@ open class AmneziaVpnService : VpnService() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.getBooleanExtra(ADB_CTL, false) == true) {
+            ServiceCompat.startForeground(
+                this, NOTIFICATION_ID,
+                serviceNotification.buildNotification(serverName, vpnProto?.label, protocolState.value),
+                foregroundServiceTypeCompat
+            )
+            adbControl()
+            return START_NOT_STICKY
+        }
         val isAlwaysOn = intent != null && intent.action == SERVICE_INTERFACE
 
         if (isAlwaysOn) {
@@ -389,7 +398,7 @@ open class AmneziaVpnService : VpnService() {
                         networkState.unbindNetworkListener()
                         stopTrafficStatsUpdateJob()
                         // stopSendingStatistics()
-                        if (!isServiceBound) stopService()
+                        if (!isServiceBound && !adbReconnecting) stopService()
                     }
 
                     DISCONNECTING -> {
@@ -529,6 +538,43 @@ open class AmneziaVpnService : VpnService() {
             }
         }
     }
+
+    // Fork builds only: see AdbControl.kt.
+    @MainThread
+    private fun adbControl() {
+        val cmd = adbCommand()
+        val saved = Prefs.load<String>(PREFS_CONFIG_KEY)
+        val patched = try {
+            adbPatch(saved, cmd)
+        } catch (e: Exception) {
+            android.util.Log.e(ADB_TAG, "adb: $cmd rejected: $e; saved ${adbSummary(saved)}")
+            return
+        }
+        android.util.Log.i(
+            ADB_TAG, "adb: $cmd; state ${protocolState.value}; " +
+                "saved ${adbSummary(saved)}; applying ${adbSummary(patched)}"
+        )
+        when (cmd["cmd"]) {
+            "connect" -> connect(patched)
+            "disconnect" -> disconnect()
+            "reconnect" -> {
+                adbReconnecting = true
+                mainScope.launch {
+                    disconnect()
+                    protocolState.first { it == DISCONNECTED || it == UNKNOWN }
+                    // Cleared only once connect() has left DISCONNECTED: the state
+                    // handler would otherwise stop the unbound service under it.
+                    connect(patched)
+                    adbReconnecting = false
+                }
+            }
+        }
+        if (cmd["cmd"] !in listOf("connect", "reconnect") && (isUnknown || isDisconnected) && !isServiceBound) {
+            stopService()
+        }
+    }
+
+    private var adbReconnecting = false
 
     @MainThread
     private fun disconnect() {
