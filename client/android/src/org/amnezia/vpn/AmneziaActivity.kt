@@ -252,6 +252,18 @@ class AmneziaActivity : QtActivity() {
     private fun processIntent(intent: Intent) {
         // disable config import when starting activity from history
         if (intent.flags and FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0) {
+            // Fork builds only: see AdbControl.kt.
+            if (intent.getBooleanExtra(ADB_CTL, false)) {
+                intent.removeExtra(ADB_CTL)
+                ContextCompat.startForegroundService(
+                    this, Intent(this, AwgService::class.java).putExtra(ADB_CTL, true)
+                )
+                // Bound, the app hears the service's state changes as it does after
+                // its own connect, so the UI follows a command sent from adb.
+                if (vpnProto == null) vpnProto = VpnProto.AWG
+                if (!isInBoundState) doBindService()
+                return
+            }
             if (intent.action == ACTION_IMPORT_CONFIG) {
                 intent.getStringExtra(EXTRA_CONFIG)?.let {
                     mainScope.launch {
