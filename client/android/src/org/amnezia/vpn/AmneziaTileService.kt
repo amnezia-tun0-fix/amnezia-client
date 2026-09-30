@@ -29,7 +29,6 @@ import org.amnezia.vpn.protocol.ProtocolState.UNKNOWN
 import org.amnezia.vpn.util.Log
 
 private const val TAG = "AmneziaTileService"
-private const val DEFAULT_TILE_LABEL = "AmneziaVPN"
 
 class AmneziaTileService : TileService() {
 
@@ -245,7 +244,7 @@ class AmneziaTileService : TileService() {
         vpnProto = vpnState.vpnProto
         val tile = qsTile ?: return
         tile.apply {
-            label = (vpnState.serverName ?: DEFAULT_TILE_LABEL) + (vpnProto?.let { " ${it.label}" } ?: "")
+            label = (vpnState.serverName ?: applicationInfo.loadLabel(packageManager).toString()) + (vpnProto?.let { " ${it.label}" } ?: "")
             when (val protocolState = vpnState.protocolState) {
                 CONNECTED -> {
                     state = Tile.STATE_ACTIVE
