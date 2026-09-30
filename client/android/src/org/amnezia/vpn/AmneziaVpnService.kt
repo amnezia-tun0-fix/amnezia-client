@@ -625,7 +625,10 @@ open class AmneziaVpnService : VpnService() {
     companion object {
         fun isRunning(context: Context, processName: String): Boolean =
             context.getSystemService<ActivityManager>()!!.runningAppProcesses.any {
-                it.processName == processName && it.importance <= IMPORTANCE_FOREGROUND_SERVICE
+                // VpnProto names the processes of org.amnezia.vpn; a build with another
+                // applicationId runs them under its own name.
+                it.processName == context.packageName + ":" + processName.substringAfter(':') &&
+                    it.importance <= IMPORTANCE_FOREGROUND_SERVICE
             }
     }
 }
