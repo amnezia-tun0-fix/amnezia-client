@@ -13,8 +13,8 @@ class AwgAndroid(ConanFile):
     name = "awg-android"
     # Strict Split Tunneling: built from the fork that adds the awgSetUidFilter
     # JNI bridge, pinned by commit. Back to the upstream tag once it is merged.
-    version = "3.1.20260814-strict.8"
-    _commit = "eac494e177d9c11eee8fb1b52a86ae56ab63c732"
+    version = "3.1.20260814-strict.exp5"
+    _commit = "5a1a0a57508793b38fb8d0abb6fe8ae71c2953ad"
     settings = "os", "arch", "build_type", "compiler"
 
     def configure(self):
@@ -49,7 +49,9 @@ class AwgAndroid(ConanFile):
         VirtualBuildEnv(self).generate()
 
         tc = CMakeToolchain(self)
-        tc.variables["GRADLE_USER_HOME"] = Path(os.path.join(self.build_folder, "gradle_user_home")).as_posix()
+        # Lab builds: a stable home, so the Go tarball the Makefile fetches from
+        # dl.google.com is downloaded once and reused.
+        tc.variables["GRADLE_USER_HOME"] = Path(os.path.expanduser("~/.cache/awg-android-gradle-home")).as_posix()
         tc.variables["CMAKE_LIBRARY_OUTPUT_DIRECTORY"] = Path(os.path.join(self.build_folder, "out")).as_posix()
         # not to warn in case of strtok() usage
         tc.extra_cflags = ["-Wno-deprecated-declarations"]
