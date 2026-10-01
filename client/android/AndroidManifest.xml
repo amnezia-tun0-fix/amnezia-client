@@ -30,7 +30,7 @@
 
     <application
         android:name=".AmneziaApplication"
-        android:label="AmneziaVPN Strict"
+        android:label="strct-AmnzVPN"
         android:icon="@mipmap/icon"
         android:roundIcon="@mipmap/icon_round"
         android:banner="@mipmap/ic_banner"
