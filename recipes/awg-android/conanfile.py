@@ -11,7 +11,10 @@ from pathlib import Path
 
 class AwgAndroid(ConanFile):
     name = "awg-android"
-    version = "3.1.20260814"
+    # Strict Split Tunneling: built from the fork that adds the awgSetUidFilter
+    # JNI bridge, pinned by commit. Back to the upstream tag once it is merged.
+    version = "3.1.20260814-strict.8"
+    _commit = "ef69a8e7182f8c62da239d4fc8de391aed0fbbdc"
     settings = "os", "arch", "build_type", "compiler"
 
     def configure(self):
@@ -36,10 +39,11 @@ class AwgAndroid(ConanFile):
     def source(self):
         git = Git(self)
         git.clone(
-            url="https://github.com/amnezia-vpn/amneziawg-android.git",
+            url="https://github.com/amnezia-tun0-fix/amneziawg-android.git",
             target=".",
-            args=["--recurse-submodules", "--branch", f"v{self.version}"]
         )
+        git.checkout(self._commit)
+        git.run("submodule update --init --recursive")
 
     def generate(self):
         VirtualBuildEnv(self).generate()
