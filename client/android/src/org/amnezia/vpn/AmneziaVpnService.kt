@@ -398,7 +398,9 @@ open class AmneziaVpnService : VpnService() {
                         networkState.unbindNetworkListener()
                         stopTrafficStatsUpdateJob()
                         // stopSendingStatistics()
-                        if (!isServiceBound && !adbReconnecting) stopService()
+                        // The store above suspends, so an adb reconnect may have started
+                        // the next connection by now: stop only if still disconnected.
+                        if (!isServiceBound && !adbReconnecting && isDisconnected) stopService()
                     }
 
                     DISCONNECTING -> {
