@@ -37,8 +37,8 @@ android {
     val abiList = qtTargetAbiList.split(",")
 
     defaultConfig {
-        // Strict Split Tunneling test builds install next to the store app (fork-only).
-        applicationId = "org.amnezia.vpn.strict"
+        // Lab builds install next to the store app and the test release (lab only).
+        applicationId = "org.amnezia.vpn.exp"
         targetSdk = qtTargetSdkVersion.toInt()
 
         // keeps language resources for only the locales specified below
