@@ -11,7 +11,10 @@ from pathlib import Path
 
 class AmneziaLibxray(ConanFile):
     name = "amnezia-libxray"
-    version = "1.0.3"
+    # Strict Split Tunneling: built from the fork that adds the RegisterUidFilter
+    # bridge, pinned by commit. Back to the upstream tag once the bridge is merged.
+    version = "1.0.3-strict.1"
+    _commit = "b9ac455aaa139fcdbfec96c6fb58f92605f294ad"
     settings = "os", "arch", "compiler"
 
     def export_sources(self):
@@ -32,8 +35,8 @@ class AmneziaLibxray(ConanFile):
             raise ConanInvalidConfiguration(f"{self.name} v{self.version} does not support {self.settings.os}")
 
     def source(self):
-        get(self, f"https://github.com/amnezia-vpn/amnezia-libxray/archive/refs/tags/v{self.version}.zip",
-            sha256="3b1194c2a76e73913fdae49983c40a219c45a164ebdae72ef1297469348de730", strip_root=True
+        get(self, f"https://github.com/amnezia-tun0-fix/amnezia-libxray/archive/{self._commit}.zip",
+            sha256="7b4c54c8cee1eecb0c37da7ece4df9706caabafbcc6fe7f8210899db0d7a96f2", strip_root=True
         )
 
     def generate(self):
