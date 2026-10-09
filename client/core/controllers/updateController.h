@@ -41,6 +41,9 @@ public:
     UpdateState::State getUpdateState() const;
     bool isStoreUpdate() const;
     bool isUpdateCheckRunning() const;
+#ifdef AMNEZIA_FORK_RELEASE
+    bool isForkCheckDue() const;
+#endif
 
 public slots:
     void checkForUpdates();
@@ -60,6 +63,9 @@ private:
     void downloadInstaller();
     QString composeDownloadUrl() const;
     void openStorePage() const;
+#ifdef AMNEZIA_FORK_RELEASE
+    void checkForkRelease();
+#endif
 
     SecureAppSettingsRepository* m_appSettingsRepository;
 

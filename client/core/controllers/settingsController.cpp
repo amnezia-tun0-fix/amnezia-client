@@ -36,7 +36,11 @@ SettingsController::SettingsController(SecureServersRepository* serversRepositor
       m_serversRepository(serversRepository),
       m_appSettingsRepository(appSettingsRepository)
 {
+#ifdef AMNEZIA_FORK_RELEASE
+    m_appVersion = QString("%1-strict.%2 (%3, %4)").arg(QString(APP_VERSION)).arg(AMNEZIA_FORK_RELEASE).arg(__DATE__, GIT_COMMIT_HASH);
+#else
     m_appVersion = QString("%1 (%2, %3)").arg(QString(APP_VERSION), __DATE__, GIT_COMMIT_HASH);
+#endif
     m_isDevModeEnabled = m_appSettingsRepository->isDevGatewayEnv();
 }
 

@@ -3380,6 +3380,36 @@ Create one from the current settings.</source>
 <context>
     <name>PageSettingsAbout</name>
     <message>
+        <location filename="../ui/qml/Pages2/PageSettingsAbout.qml" line="107"/>
+        <source>This strict build</source>
+        <translation>Эта strict-сборка</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/Pages2/PageSettingsAbout.qml" line="138"/>
+        <source>AmneziaVPN project</source>
+        <translation>Проект AmneziaVPN</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/Pages2/PageSettingsAbout.qml" line="251"/>
+        <source>Report a bug in this build</source>
+        <translation>Сообщить об ошибке в этой сборке</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/Pages2/PageSettingsAbout.qml" line="252"/>
+        <source>Issues of the strict build on GitHub</source>
+        <translation>Задачи strict-сборки на GitHub</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/Pages2/PageSettingsAbout.qml" line="262"/>
+        <source>Tunnel bypass: issue #2457</source>
+        <translation>Обход туннеля: issue #2457</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/Pages2/PageSettingsAbout.qml" line="263"/>
+        <source>Discussion of the vulnerability this build fixes</source>
+        <translation>Обсуждение уязвимости, которую закрывает эта сборка</translation>
+    </message>
+    <message>
         <location filename="../ui/qml/Pages2/PageSettingsAbout.qml" line="21"/>
         <source>You have the latest version of AmneziaVPN</source>
         <translation>У вас установлена последняя версия AmneziaVPN</translation>

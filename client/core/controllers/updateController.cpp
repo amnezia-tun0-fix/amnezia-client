@@ -138,6 +138,11 @@ void UpdateController::checkForUpdates()
     }
     setUpdateCheckRunning(true);
 
+#ifdef AMNEZIA_FORK_RELEASE
+    checkForkRelease();
+    return;
+#endif
+
     auto gatewayController = QSharedPointer<GatewayController>::create(m_appSettingsRepository->getGatewayEndpoint(),
                                                                        m_appSettingsRepository->isDevGatewayEnv(),
                                                                        7000,

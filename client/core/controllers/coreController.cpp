@@ -300,6 +300,11 @@ void CoreController::checkForAppUpdates()
     if (!m_appSettingsRepository->isAutoUpdateCheckEnabled()) {
         return;
     }
+#ifdef AMNEZIA_FORK_RELEASE
+    if (!m_updateController->isForkCheckDue()) {
+        return;
+    }
+#endif
     m_updateController->checkForUpdates();
 }
 

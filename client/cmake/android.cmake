@@ -52,6 +52,18 @@ find_package(awg-android REQUIRED)
 set(LIBS ${LIBS} amnezia::awg-android)
 set_property(TARGET ${PROJECT} APPEND PROPERTY QT_ANDROID_EXTRA_LIBS ${AMNEZIA_ANDROID_LIBWG_PATH} ${AMNEZIA_ANDROID_LIBWG_QUICK_PATH})
 
+# Fork builds check the fork's own releases (fork-only). A release takes the number of the
+# awg-android recipe it links: strict.N, or strict.expN in the lab build.
+string(REGEX MATCH "-strict\\.(exp)?([0-9]+)$" _fork_release "${awg-android_VERSION}")
+if(NOT _fork_release)
+    message(FATAL_ERROR "awg-android ${awg-android_VERSION} has no -strict.N suffix to number the fork release")
+endif()
+target_compile_definitions(${PROJECT} PRIVATE
+    AMNEZIA_FORK_RELEASE=${CMAKE_MATCH_2}
+    AMNEZIA_FORK_RELEASES_REPO=\"amnezia-tun0-fix/amnezia-client\"
+)
+set(SOURCES ${SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/core/controllers/forkUpdateCheck.cpp)
+
 find_package(amnezia-libxray REQUIRED)
 file(COPY ${AMNEZIA_LIBXRAY_PATH} DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/android/xray/libXray)
 

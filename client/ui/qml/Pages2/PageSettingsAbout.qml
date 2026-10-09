@@ -97,6 +97,47 @@ PageType {
 
                 text: qsTr("Contacts")
             }
+
+            CaptionTextType {
+                Layout.fillWidth: true
+                Layout.topMargin: 16
+                Layout.leftMargin: 16
+                Layout.rightMargin: 16
+
+                text: qsTr("This strict build")
+                color: AmneziaStyle.color.paleGray
+            }
+
+            Repeater {
+                model: forkContacts
+
+                delegate: ColumnLayout {
+                    Layout.fillWidth: true
+
+                    LabelWithButtonType {
+                        Layout.fillWidth: true
+                        Layout.topMargin: 6
+
+                        text: modelData.title
+                        descriptionText: modelData.description
+                        leftImageSource: modelData.imageSource
+
+                        clickedFunction: modelData.handler
+                    }
+
+                    DividerType {}
+                }
+            }
+
+            CaptionTextType {
+                Layout.fillWidth: true
+                Layout.topMargin: 24
+                Layout.leftMargin: 16
+                Layout.rightMargin: 16
+
+                text: qsTr("AmneziaVPN project")
+                color: AmneziaStyle.color.paleGray
+            }
         }
 
         model: contacts
@@ -192,12 +233,39 @@ PageType {
         }
     }
     
+    property list<QtObject> forkContacts: [
+        forkIssues,
+        tunnelBypassIssue
+    ]
+
     property list<QtObject> contacts: [
         telegramGroup,
         mail,
         github,
         website
     ]
+
+    QtObject {
+        id: forkIssues
+
+        readonly property string title: qsTr("Report a bug in this build")
+        readonly property string description: qsTr("Issues of the strict build on GitHub")
+        readonly property string imageSource: "qrc:/images/controls/github.svg"
+        readonly property var handler: function() {
+            Qt.openUrlExternally("https://github.com/amnezia-tun0-fix/amnezia-client/issues")
+        }
+    }
+
+    QtObject {
+        id: tunnelBypassIssue
+
+        readonly property string title: qsTr("Tunnel bypass: issue #2457")
+        readonly property string description: qsTr("Discussion of the vulnerability this build fixes")
+        readonly property string imageSource: "qrc:/images/controls/github.svg"
+        readonly property var handler: function() {
+            Qt.openUrlExternally("https://github.com/amnezia-vpn/amnezia-client/issues/2457")
+        }
+    }
 
     QtObject {
         id: telegramGroup
