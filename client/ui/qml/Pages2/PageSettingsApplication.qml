@@ -199,7 +199,7 @@ PageType {
                 Layout.margins: 16
 
                 text: qsTr("Check for updates automatically")
-                descriptionText: qsTr("Check for a new app version at startup")
+                descriptionText: qsTr("Check for a new app version once a day, also while the VPN is on")
 
                 checked: SettingsController.isAutoUpdateCheckEnabled()
                 onToggled: function() {

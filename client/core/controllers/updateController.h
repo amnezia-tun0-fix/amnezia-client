@@ -4,6 +4,9 @@
 #include <QObject>
 #include <QQmlEngine>
 #include <QStringList>
+#ifdef AMNEZIA_FORK_RELEASE
+    #include <QJsonObject>
+#endif
 
 #include "core/repositories/secureAppSettingsRepository.h"
 
@@ -42,7 +45,7 @@ public:
     bool isStoreUpdate() const;
     bool isUpdateCheckRunning() const;
 #ifdef AMNEZIA_FORK_RELEASE
-    bool isForkCheckDue() const;
+    bool isForkCheckDue();
 #endif
 
 public slots:
@@ -56,6 +59,9 @@ signals:
     void updateCheckFailed();
     void updateStateChanged();
     void updateCheckRunningChanged();
+#ifdef AMNEZIA_FORK_RELEASE
+    void updateKnown();
+#endif
 
 private:
     void setUpdateState(UpdateState::State state);
@@ -65,6 +71,7 @@ private:
     void openStorePage() const;
 #ifdef AMNEZIA_FORK_RELEASE
     void checkForkRelease();
+    bool setForkRelease(const QJsonObject &state);
 #endif
 
     SecureAppSettingsRepository* m_appSettingsRepository;

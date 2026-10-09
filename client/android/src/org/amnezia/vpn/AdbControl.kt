@@ -20,6 +20,9 @@ import org.json.JSONObject
 //   mode=off|include|exclude                 appSplitTunnelType
 //   apps=a,b  add=a,b  del=a,b               splitTunnelApps: replace, add, remove
 //   strict=0|1                               strictSplitTunneling
+//   upd=0|1|-                                forkUpdates.autoCheck: the service's own update
+//                                            check (ForkUpdates.kt); on when absent, and -
+//                                            removes it, as in a config from before the check
 //
 // Changes are applied to the config the service saved last, which is then saved again
 // on connect. The app's own settings screen does not see them: connecting from the UI
@@ -56,6 +59,15 @@ fun adbPatch(saved: String, cmd: Map<String, String>): String {
         require(it == "0" || it == "1") { "strict must be 0 or 1" }
         c.put("strictSplitTunneling", it == "1")
     }
+    cmd["upd"]?.let {
+        require(it == "0" || it == "1" || it == "-") { "upd must be 0, 1 or -" }
+        if (it == "-") {
+            c.remove("forkUpdates")
+        } else {
+            (c.optJSONObject("forkUpdates") ?: JSONObject().also { f -> c.put("forkUpdates", f) })
+                .put("autoCheck", it == "1")
+        }
+    }
     return c.toString()
 }
 
@@ -63,7 +75,8 @@ fun adbSummary(config: String?): String = try {
     val c = JSONObject(config ?: "")
     "mode=${adbModes.getOrElse(c.optInt("appSplitTunnelType")) { "?" }} " +
         "apps=${adbApps(c).joinToString(",")} " +
-        "strict=${if (c.optBoolean("strictSplitTunneling")) 1 else 0}"
+        "strict=${if (c.optBoolean("strictSplitTunneling")) 1 else 0} " +
+        "upd=${c.optJSONObject("forkUpdates")?.let { if (it.optBoolean("autoCheck", true)) 1 else 0 } ?: "-"}"
 } catch (e: JSONException) {
     "no saved config"
 }

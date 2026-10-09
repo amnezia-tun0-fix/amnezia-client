@@ -493,6 +493,11 @@ Already installed containers were found on the server. All installed containers 
 <context>
     <name>PageHome</name>
     <message>
+        <location filename="../ui/qml/Pages2/PageHome.qml" line="113"/>
+        <source>Update available: %1</source>
+        <translation>Доступно обновление: %1</translation>
+    </message>
+    <message>
         <location filename="../ui/qml/Pages2/PageHome.qml" line="121"/>
         <source>Logging enabled</source>
         <translation>Логирование включено</translation>
@@ -4123,8 +4128,8 @@ Create one from the current settings.</source>
     </message>
     <message>
         <location filename="../ui/qml/Pages2/PageSettingsApplication.qml" line="202"/>
-        <source>Check for a new app version at startup</source>
-        <translation>Проверять наличие новой версии приложения при запуске</translation>
+        <source>Check for a new app version once a day, also while the VPN is on</source>
+        <translation>Проверять наличие новой версии раз в день, в том числе пока работает VPN</translation>
     </message>
     <message>
         <location filename="../ui/qml/Pages2/PageSettingsApplication.qml" line="226"/>

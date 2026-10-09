@@ -39,6 +39,7 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.amnezia.vpn.protocol.BadConfigException
 import org.amnezia.vpn.protocol.ProtocolState.CONNECTED
@@ -100,6 +101,9 @@ open class AmneziaVpnService : VpnService() {
     private var connectionJob: Job? = null
     private var disconnectionJob: Job? = null
     private var trafficStatsUpdateJob: Job? = null
+    // Fork builds only: see ForkUpdates.kt.
+    private var forkUpdateSettings: ForkUpdates.Settings? = null
+    private var forkUpdateJob: Job? = null
     // private var statisticsSendingJob: Job? = null
     private lateinit var networkState: NetworkState
     private lateinit var trafficStats: TrafficStats
@@ -210,6 +214,7 @@ open class AmneziaVpnService : VpnService() {
         mainScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
         connectionScope = CoroutineScope(SupervisorJob() + Dispatchers.IO + connectionExceptionHandler)
         loadServerData()
+        loadForkUpdate()
         launchProtocolStateHandler()
         networkState = NetworkState(this, ::reconnect)
         trafficStats = TrafficStats()
@@ -392,11 +397,13 @@ open class AmneziaVpnService : VpnService() {
                         networkState.bindNetworkListener()
                         // if (isActivityConnected) launchSendingStatistics()
                         launchTrafficStatsUpdate()
+                        launchForkUpdateCheck()
                     }
 
                     DISCONNECTED -> {
                         networkState.unbindNetworkListener()
                         stopTrafficStatsUpdateJob()
+                        forkUpdateJob?.cancel()
                         // stopSendingStatistics()
                         // The store above suspends, so an adb reconnect may have started
                         // the next connection by now: stop only if still disconnected.
@@ -406,6 +413,7 @@ open class AmneziaVpnService : VpnService() {
                     DISCONNECTING -> {
                         networkState.unbindNetworkListener()
                         stopTrafficStatsUpdateJob()
+                        forkUpdateJob?.cancel()
                         // stopSendingStatistics()
                     }
 
@@ -509,6 +517,8 @@ open class AmneziaVpnService : VpnService() {
 
         val config = parseConfigToJson(vpnConfig)
         saveServerData(config)
+        forkUpdateSettings = ForkUpdates.settings(applicationContext, config)
+        if (forkUpdateSettings == null) serviceNotification.forkUpdate = null
         if (config == null) {
             onError("Invalid VPN config")
             protocolState.value = DISCONNECTED
@@ -537,6 +547,39 @@ open class AmneziaVpnService : VpnService() {
             vpnProto?.protocol?.let { protocol ->
                 protocol.initialize(applicationContext, protocolState, ::onError)
                 protocol.startVpn(config, Builder(), ::protect)
+            }
+        }
+    }
+
+    // Fork builds only: see ForkUpdates.kt. A release found before shows from the service's
+    // start, before any connect, unless the config saved last has the automatic check off.
+    private fun loadForkUpdate() {
+        val saved = try {
+            JSONObject(Prefs.load<String>(PREFS_CONFIG_KEY))
+        } catch (e: Exception) {
+            null
+        }
+        forkUpdateSettings = ForkUpdates.settings(applicationContext, saved)
+        serviceNotification.forkUpdate = forkUpdateSettings?.let { ForkUpdates.known(applicationContext, it) }
+    }
+
+    // Fork builds only: see ForkUpdates.kt. Nothing runs unless the app's automatic update
+    // check was on when it sent the config.
+    @MainThread
+    private fun launchForkUpdateCheck() {
+        val settings = forkUpdateSettings ?: return
+        forkUpdateJob?.cancel()
+        forkUpdateJob = mainScope.launch {
+            while (true) {
+                val update = withContext(Dispatchers.IO) { ForkUpdates.checkIfDue(applicationContext, settings) }
+                if (update?.tag != serviceNotification.forkUpdate?.tag) {
+                    serviceNotification.forkUpdate = update
+                    serviceNotification.updateNotification(serverName, vpnProto?.label, protocolState.value)
+                }
+                if (update != null && ForkUpdates.markNotified(applicationContext, update)) {
+                    serviceNotification.showForkUpdate(update)
+                }
+                delay(ForkUpdates.CHECK_PERIOD_MS)
             }
         }
     }

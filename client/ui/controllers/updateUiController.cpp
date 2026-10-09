@@ -12,6 +12,10 @@ UpdateUiController::UpdateUiController(UpdateController* updateController, QObje
         connect(m_updateController, &UpdateController::updateCheckFailed, this, &UpdateUiController::updateCheckFailed);
         connect(m_updateController, &UpdateController::updateStateChanged, this, &UpdateUiController::updateStateChanged);
         connect(m_updateController, &UpdateController::updateCheckRunningChanged, this, &UpdateUiController::isCheckRunningChanged);
+        connect(m_updateController, &UpdateController::updateFound, this, &UpdateUiController::availableVersionChanged);
+#ifdef AMNEZIA_FORK_RELEASE
+        connect(m_updateController, &UpdateController::updateKnown, this, &UpdateUiController::availableVersionChanged);
+#endif
     }
 }
 

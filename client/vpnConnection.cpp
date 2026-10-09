@@ -517,6 +517,12 @@ void VpnConnection::appendSplitTunnelingConfig()
 
     m_vpnConfiguration.insert(configKey::strictSplitTunneling, m_appSettingsRepository->isStrictSplitTunnelingEnabled());
 
+#ifdef AMNEZIA_FORK_RELEASE
+    // The VPN service checks the fork's releases while connected (ForkUpdates.kt).
+    m_vpnConfiguration.insert("forkUpdates", QJsonObject {
+            { "autoCheck", m_appSettingsRepository->isAutoUpdateCheckEnabled() } });
+#endif
+
     qDebug() << QString("Site split tunneling is %1, route mode is %2")
                         .arg(m_appSettingsRepository->isSitesSplitTunnelingEnabled() ? "enabled" : "disabled")
                         .arg(routeMode);

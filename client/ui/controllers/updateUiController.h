@@ -19,6 +19,7 @@ class UpdateUiController : public QObject
     Q_PROPERTY(int updateState READ getUpdateState NOTIFY updateStateChanged)
     Q_PROPERTY(bool isStoreUpdate READ isStoreUpdate CONSTANT)
     Q_PROPERTY(bool isCheckRunning READ isCheckRunning NOTIFY isCheckRunningChanged)
+    Q_PROPERTY(QString availableVersion READ getVersion NOTIFY availableVersionChanged)
 
 public:
     explicit UpdateUiController(UpdateController* updateController, QObject *parent = nullptr);
@@ -46,6 +47,7 @@ signals:
     void updateCheckFailed();
     void updateStateChanged();
     void isCheckRunningChanged();
+    void availableVersionChanged();
 
 private:
     UpdateController* m_updateController;

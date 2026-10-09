@@ -25,4 +25,10 @@
     <string name="openNotificationSettings">Open notification settings</string>
 
     <string name="tvNoFileBrowser">Please install a file management utility to browse files</string>
+
+    <!-- Fork builds only: see ForkUpdates.kt -->
+    <string name="forkUpdateAction">Update</string>
+    <string name="forkUpdateTitle">New version available</string>
+    <string name="forkUpdateText">%1$s: tap to open the release</string>
+    <string name="forkUpdateChannel">Updates</string>
 </resources>

@@ -25,4 +25,10 @@
     <string name="openNotificationSettings">Открыть настройки уведомлений</string>
 
     <string name="tvNoFileBrowser">Пожалуйста, установите приложение для просмотра файлов</string>
+
+    <!-- Fork builds only: see ForkUpdates.kt -->
+    <string name="forkUpdateAction">Обновить</string>
+    <string name="forkUpdateTitle">Доступна новая версия</string>
+    <string name="forkUpdateText">%1$s: нажмите, чтобы открыть релиз</string>
+    <string name="forkUpdateChannel">Обновления</string>
 </resources>

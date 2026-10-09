@@ -101,6 +101,26 @@ PageType {
             anchors.bottomMargin: 16
 
             BasicButtonType {
+                id: updateAvailableButton
+                objectName: "updateAvailableButton"
+
+                Layout.alignment: Qt.AlignHCenter
+                Layout.bottomMargin: 8
+
+                implicitHeight: 36
+
+                visible: UpdateController.availableVersion !== ""
+                text: qsTr("Update available: %1").arg(UpdateController.availableVersion)
+
+                Keys.onEnterPressed: this.clicked()
+                Keys.onReturnPressed: this.clicked()
+
+                onClicked: {
+                    PageController.goToPage(PageEnum.PageUpdate)
+                }
+            }
+
+            BasicButtonType {
                 id: loggingButton
                 objectName: "loggingButton"
 

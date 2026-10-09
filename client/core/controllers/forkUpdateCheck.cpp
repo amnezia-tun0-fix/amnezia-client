@@ -1,14 +1,19 @@
 // Fork builds (org.amnezia.vpn.strict) look for updates among the fork's own GitHub releases
 // instead of asking the Amnezia gateway, which knows nothing about them. Fork-only.
+//
+// The VPN service checks too (ForkUpdates.kt), since the app's window may stay closed for
+// weeks. Both keep what they learn in files/forkUpdate.json, so that whoever checks first
+// on a given day answers for the other.
 
 #include "updateController.h"
 
-#include <QDateTime>
+#include <QDate>
+#include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QNetworkReply>
 #include <QRegularExpression>
-#include <QSettings>
+#include <QSaveFile>
 #include <QStandardPaths>
 #include <QVersionNumber>
 
@@ -20,29 +25,85 @@ namespace
 {
     Logger logger("UpdateController");
 
-    constexpr qint64 kForkCheckIntervalSecs = 24 * 60 * 60;
-    const QLatin1String kLastForkCheckKey("lastUpdateCheck");
-
-    QString forkSettingsPath()
+    QString forkStatePath()
     {
-        return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/forkUpdateCheck.ini";
+        return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/forkUpdate.json";
+    }
+
+    // A check is due once per calendar day, local time. Same key as ForkUpdates.dayKey().
+    QString forkDayKey()
+    {
+        return QDate::currentDate().toString(Qt::ISODate);
+    }
+
+    QJsonObject readForkState()
+    {
+        QFile file(forkStatePath());
+        if (!file.open(QIODevice::ReadOnly)) {
+            return {};
+        }
+        return QJsonDocument::fromJson(file.readAll()).object();
+    }
+
+    void writeForkState(const QJsonObject &state)
+    {
+        QSaveFile file(forkStatePath());
+        if (file.open(QIODevice::WriteOnly)) {
+            file.write(QJsonDocument(state).toJson(QJsonDocument::Compact));
+            file.commit();
+        }
     }
 
     QString forkVersion()
     {
         return QStringLiteral("%1-strict.%2").arg(QLatin1String(APP_VERSION)).arg(AMNEZIA_FORK_RELEASE);
     }
+
+    // True for a tag vX-strict.N newer than this build.
+    bool isNewerForkTag(const QString &tag)
+    {
+        static const QRegularExpression tagPattern(QStringLiteral("^v(\\d+(?:\\.\\d+)*)-strict\\.(\\d+)$"));
+        const QRegularExpressionMatch match = tagPattern.match(tag);
+        if (!match.hasMatch()) {
+            return false;
+        }
+        const int baseOrder = QVersionNumber::compare(QVersionNumber::fromString(match.captured(1)),
+                                                      QVersionNumber::fromString(QLatin1String(APP_VERSION)));
+        return baseOrder > 0 || (baseOrder == 0 && match.captured(2).toInt() > AMNEZIA_FORK_RELEASE);
+    }
 }
 
-bool UpdateController::isForkCheckDue() const
+bool UpdateController::isForkCheckDue()
 {
-    QSettings settings(forkSettingsPath(), QSettings::IniFormat);
-    const QDateTime lastCheck = settings.value(kLastForkCheckKey).toDateTime();
-    const QDateTime now = QDateTime::currentDateTimeUtc();
-    if (lastCheck.isValid() && lastCheck <= now && lastCheck.secsTo(now) < kForkCheckIntervalSecs) {
-        logger.info() << "Update check skipped, last one at" << lastCheck.toString(Qt::ISODate);
+    const QJsonObject state = readForkState();
+    if (state.value("lastCheckDay").toString() != forkDayKey()) {
+        return true;
+    }
+    logger.info() << "Update check skipped, already done today";
+    // Checked today, by the app or by the VPN service: show what was found, without
+    // opening the update page again.
+    if (setForkRelease(state)) {
+        emit updateKnown();
+    }
+    return false;
+}
+
+bool UpdateController::setForkRelease(const QJsonObject &state)
+{
+    const QString tag = state.value("latestTag").toString();
+    if (!isNewerForkTag(tag)) {
         return false;
     }
+    m_version = tag.mid(1);
+    m_releaseDate = state.value("publishedAt").toString().left(10);
+    m_description = state.value("latestName").toString();
+    m_tags.clear();
+    m_newFeatures.clear();
+    m_improvements.clear();
+    m_bugFixes.clear();
+    m_downloadBaseUrl.clear();
+    m_releasePageUrl = state.value("latestUrl").toString();
+    setUpdateState(UpdateState::State::Idle);
     return true;
 }
 
@@ -68,40 +129,23 @@ void UpdateController::checkForkRelease()
             return;
         }
 
-        QSettings settings(forkSettingsPath(), QSettings::IniFormat);
-        settings.setValue(kLastForkCheckKey, QDateTime::currentDateTimeUtc());
-
         const QJsonObject release = QJsonDocument::fromJson(reply->readAll()).object();
-        const QString tag = release.value("tag_name").toString();
+        QJsonObject state = readForkState();
+        state["lastCheckDay"] = forkDayKey();
+        state["latestTag"] = release.value("tag_name").toString();
+        state["latestName"] = release.value("name").toString();
+        state["latestUrl"] = release.value("html_url").toString();
+        state["publishedAt"] = release.value("published_at").toString();
+        writeForkState(state);
 
-        static const QRegularExpression tagPattern(QStringLiteral("^v(\\d+(?:\\.\\d+)*)-strict\\.(\\d+)$"));
-        const QRegularExpressionMatch match = tagPattern.match(tag);
-        if (!match.hasMatch()) {
-            logger.warning() << "Latest fork release" << tag << "is not named vX-strict.N, ignored";
+        if (!setForkRelease(state)) {
+            logger.info() << "Latest fork release" << state.value("latestTag").toString() << "this build"
+                          << forkVersion() << ": up to date";
             emit updateNotFound();
             return;
         }
-
-        const int baseOrder = QVersionNumber::compare(QVersionNumber::fromString(match.captured(1)),
-                                                      QVersionNumber::fromString(QLatin1String(APP_VERSION)));
-        if (baseOrder < 0 || (baseOrder == 0 && match.captured(2).toInt() <= AMNEZIA_FORK_RELEASE)) {
-            logger.info() << "Latest fork release" << tag << "this build" << forkVersion() << ": up to date";
-            emit updateNotFound();
-            return;
-        }
-
-        m_version = tag.mid(1);
-        m_releaseDate = release.value("published_at").toString().left(10);
-        m_description = release.value("name").toString();
-        m_tags.clear();
-        m_newFeatures.clear();
-        m_improvements.clear();
-        m_bugFixes.clear();
-        m_downloadBaseUrl.clear();
-        m_releasePageUrl = release.value("html_url").toString();
 
         logger.info() << "Fork update available:" << m_version << "this build" << forkVersion();
-        setUpdateState(UpdateState::State::Idle);
         emit updateFound();
     });
 }

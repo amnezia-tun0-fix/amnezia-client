@@ -8,6 +8,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationChannelCompat.Builder
 import androidx.core.app.NotificationCompat
@@ -30,6 +31,11 @@ private const val GET_ACTIVITY_REQUEST_CODE = 0
 private const val CONNECT_REQUEST_CODE = 1
 private const val DISCONNECT_REQUEST_CODE = 2
 
+// Fork builds only: see ForkUpdates.kt.
+private const val UPDATES_CHANNEL_ID: String = "org.amnezia.vpn.updates"
+private const val UPDATE_NOTIFICATION_ID = 1338
+private const val UPDATE_REQUEST_CODE = 3
+
 class ServiceNotification(private val context: Context) {
 
     private val upDownSymbols = when (Build.BRAND) {
@@ -38,6 +44,10 @@ class ServiceNotification(private val context: Context) {
     }
 
     private val notificationManager = NotificationManagerCompat.from(context)
+
+    // Fork builds only: a newer release of the fork, shown next to the connection state,
+    // whatever the state, for as long as the notification is there.
+    var forkUpdate: ForkUpdates.Release? = null
 
     private val notificationBuilder = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
         .setShowWhen(false)
@@ -67,13 +77,18 @@ class ServiceNotification(private val context: Context) {
         return notificationBuilder
             .setSmallIcon(R.drawable.ic_amnezia_round)
             .setContentTitle((serverName ?: "AmneziaVPN") + (protocol?.let { " $it" } ?: ""))
-            .setContentText(context.getString(state))
+            .setContentText(forkUpdate?.let {
+                ForkUpdates.statusWithUpdate(context.getString(state), context.getString(R.string.forkUpdateAction))
+            } ?: context.getString(state))
             .setSubText(speedString)
             .setWhen(System.currentTimeMillis())
             .clearActions()
             .apply {
                 getAction(state)?.let {
                     addAction(it)
+                }
+                forkUpdate?.let {
+                    addAction(0, context.getString(R.string.forkUpdateAction), openRelease(it))
                 }
             }
             .build()
@@ -84,6 +99,32 @@ class ServiceNotification(private val context: Context) {
             .setWhen(System.currentTimeMillis())
             .setSubText(getSpeedString(speed))
             .build()
+
+    // Fork builds only: once per release, a notification of its own that can be dismissed.
+    @SuppressLint("MissingPermission")
+    fun showForkUpdate(release: ForkUpdates.Release) {
+        if (!context.isNotificationPermissionGranted()) return
+        notificationManager.notify(
+            UPDATE_NOTIFICATION_ID,
+            NotificationCompat.Builder(context, UPDATES_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_amnezia_round)
+                .setContentTitle(context.getString(R.string.forkUpdateTitle))
+                .setContentText(context.getString(R.string.forkUpdateText, release.version))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
+                .setAutoCancel(true)
+                .setContentIntent(openRelease(release))
+                .build()
+        )
+    }
+
+    private fun openRelease(release: ForkUpdates.Release): PendingIntent =
+        PendingIntent.getActivity(
+            context,
+            UPDATE_REQUEST_CODE,
+            Intent(Intent.ACTION_VIEW, Uri.parse(release.url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
 
     fun isNotificationEnabled(): Boolean {
         if (!context.isNotificationPermissionGranted()) return false
@@ -160,6 +201,12 @@ class ServiceNotification(private val context: Context) {
                         .setLightsEnabled(false)
                         .setName("AmneziaVPN")
                         .setDescription(context.resources.getString(R.string.notificationChannelDescription))
+                        .build()
+                )
+                // Fork builds only: see ForkUpdates.kt.
+                createNotificationChannel(
+                    Builder(UPDATES_CHANNEL_ID, NotificationManagerCompat.IMPORTANCE_HIGH)
+                        .setName(context.resources.getString(R.string.forkUpdateChannel))
                         .build()
                 )
             }
